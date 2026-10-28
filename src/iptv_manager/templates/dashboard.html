@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · IPTV Manager{% endblock %}
+{% block content %}
+  <section class="hero compact-hero">
+    <div>
+      <p class="eyebrow">IPTV WORKFLOW</p>
+      <h1>Find what works.<br><span>Watch what matters.</span></h1>
+      <p class="lede">Import the public IPTV list, verify streams, choose favorites, and publish one clean URL for Hot Player.</p>
+    </div>
+    <div class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  </section>
+
+  <section class="stats" aria-label="Playlist statistics">
+    <article><strong id="stat-channels">{{ "{:,}".format(stats.channels) }}</strong><span>Total channels</span></article>
+    <article><strong id="stat-active">{{ "{:,}".format(stats.active) }}</strong><span>Active upstream</span></article>
+    <article><strong id="stat-working">{{ "{:,}".format(stats.working) }}</strong><span>Verified live</span></article>
+    <article><strong id="stat-favorites">{{ stats.favorites }}</strong><span>Favorite groups</span></article>
+  </section>
+
+  <section class="workflow-grid panel">
+    <article class="workflow-card">
+      <span class="step-number">01</span>
+      <p class="eyebrow">SOURCE</p>
+      <h2>Import channels</h2>
+      <p class="card-copy">Add or refresh the iptv-org Extended M3U source. Existing favorites are preserved.</p>
+      <label for="source-url">Playlist URL</label>
+      <input id="source-url" type="url" value="https://iptv-org.github.io/iptv/index.m3u">
+      <button id="import-source" class="button primary" type="button">Import / refresh</button>
+      <p id="source-message" class="inline-message" aria-live="polite"></p>
+    </article>
+
+    <article class="workflow-card">
+      <span class="step-number">02</span>
+      <p class="eyebrow">HEALTH</p>
+      <h2>Scan streams</h2>
+      <p class="card-copy">Checks run with bounded concurrency, timeouts, retries, and persistent history.</p>
+      <div class="button-row">
+        <button id="scan-all" class="button primary" type="button">Scan active channels</button>
+        <button id="scan-favorites" class="button" type="button">Favorites only</button>
+      </div>
+      <div id="scan-progress" class="scan-monitor hidden" aria-live="polite">
+        <div class="scan-monitor-heading">
+          <div class="scan-state-wrap">
+            <span id="scan-state-dot" class="scan-state-dot"></span>
+            <div>
+              <span class="scan-kicker">HEALTH SCAN</span>
+              <strong id="scan-state">Running</strong>
+            </div>
+          </div>
+          <strong id="scan-percent" class="scan-percent">0%</strong>
+        </div>
+        <div class="progress-track scan-progress-track">
+          <i id="scan-progress-bar"></i>
+        </div>
+        <div class="scan-metrics">
+          <div><strong id="scan-checked">0</strong><span>Checked</span></div>
+          <div><strong id="scan-live">0</strong><span>Live</span></div>
+          <div><strong id="scan-failed">0</strong><span>Failed</span></div>
+          <div><strong id="scan-uncertain">0</strong><span>Uncertain</span></div>
+        </div>
+        <div class="scan-monitor-footer">
+          <span id="scan-eta">Calculating remaining time…</span>
+          <button id="resume-scan" class="button primary small hidden" type="button">Resume previous scan</button>
+          <button id="cancel-scan" class="button danger small" type="button">Stop scan</button>
+        </div>
+        <p id="scan-message" class="sr-only"></p>
+      </div>
+    </article>
+
+    <article class="workflow-card">
+      <span class="step-number">03</span>
+      <p class="eyebrow">HOT PLAYER</p>
+      <h2>Publish favorites</h2>
+      <p class="card-copy">Create a group, add live channels below, then paste its URL into Hot Player.</p>
+      <div class="inline-form">
+        <input id="group-name" type="text" placeholder="e.g. Living Room">
+        <button id="create-group" class="button" type="button">Create</button>
+      </div>
+      <select id="favorite-group" aria-label="Favorite group"><option value="">No groups yet</option></select>
+      <div class="playlist-url-row">
+        <input id="playlist-url" type="text" readonly placeholder="Create or select a group">
+        <button id="copy-playlist" class="button" type="button">Copy URL</button>
+      </div>
+      <p class="network-note">Your TV must be able to reach this address. A localhost or 127.0.0.1 URL only works on this computer.</p>
+      <a class="text-link" href="https://hotplayer.app/upload" target="_blank" rel="noreferrer">Open Hot Player upload portal ↗</a>
+    </article>
+  </section>
+
+  <section class="panel data-panel" aria-labelledby="data-heading">
+    <div>
+      <p class="eyebrow">DATA PORTABILITY</p>
+      <h2 id="data-heading">Take your list with you</h2>
+      <p>Download a safe SQLite snapshot, then restore it on your local PC or in GitHub Codespaces. Runtime data is never committed to Git.</p>
+    </div>
+    <div class="data-actions">
+      <a class="button" href="/api/backups/database" download>Download backup</a>
+      <input id="restore-file" class="sr-only" type="file" accept=".db,application/vnd.sqlite3">
+      <button id="restore-backup" class="button" type="button">Restore backup</button>
+    </div>
+    <p id="backup-message" class="inline-message" aria-live="polite"></p>
+  </section>
+
+  <section class="panel channel-browser">
+    <div class="panel-heading browser-heading">
+      <div><p class="eyebrow">CHANNELS</p><h2>Browse and curate</h2></div>
+      <div class="filters">
+        <input id="channel-search" type="search" placeholder="Search channel name">
+        <select id="health-filter" aria-label="Health status">
+          <option value="">All health states</option>
+          <option value="working">Live</option>
+          <option value="failed">Failed</option>
+          <option value="uncertain">Uncertain</option>
+          <option value="unknown">Not checked</option>
+          <option value="geographically_restricted">Geo-restricted</option>
+        </select>
+      </div>
+    </div>
+    <div id="channel-list" class="channel-list">
+      <div class="empty"><p>Import a playlist to start browsing channels.</p></div>
+    </div>
+    <div class="pagination">
+      <button id="previous-page" class="button" type="button">← Previous</button>
+      <span id="page-message">Page 1</span>
+      <button id="next-page" class="button" type="button">Next →</button>
+    </div>
+  </section>
+  <script src="{{ url_for('static', path='/app.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "IPTV Manager: Start",
+      "type": "shell",
+      "command": "python",
+      "args": ["-m", "uvicorn", "iptv_manager.app:app", "--host", "0.0.0.0", "--port", "8000"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "IPTV Manager: Test",
+      "type": "shell",
+      "command": "pytest",
+      "args": ["-q"],
+      "problemMatcher": [],
+      "group": "test"
+    }
+  ]
+}
