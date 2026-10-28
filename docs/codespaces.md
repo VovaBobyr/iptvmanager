@@ -8,8 +8,9 @@ mechanism between them.
 
 1. Open the repository on GitHub.
 2. Select **Code**, **Codespaces**, then **Create codespace on main**.
-3. Wait for the dev container to finish. It installs FFmpeg and the Python package, starts Uvicorn
-   on port 8000, and opens the dashboard through a private forwarded port.
+3. Wait for the dev container to finish. It installs the Python package, starts Uvicorn on port
+   8000, and opens the dashboard through a private forwarded port. Codespaces uses HTTP stream
+   validation by default; FFprobe remains an optional enhancement for other deployments.
 4. Import or restore a playlist database and start a scan from the dashboard.
 
 Application state is stored at `data/iptv.db` under `/workspaces`, so it survives stopping,

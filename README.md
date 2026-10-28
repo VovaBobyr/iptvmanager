@@ -50,9 +50,10 @@ Application state is stored in `data/iptv.db`. Configuration variables are docum
 
 ## GitHub Codespaces
 
-Select **Code → Codespaces → Create codespace** in GitHub. The included dev container installs
-Python, FFmpeg, and project dependencies, starts IPTV Manager, and opens its private forwarded
-port. The Codespace uses its own persistent `data/iptv.db` inside `/workspaces`.
+Select **Code → Codespaces → Create codespace** in GitHub. The included dev container provides
+Python, installs the project dependencies, starts IPTV Manager, and opens its private forwarded
+port. Codespaces uses HTTP stream validation by default; FFprobe remains an optional enhancement
+for other deployments. The Codespace uses its own persistent `data/iptv.db` inside `/workspaces`.
 
 To move channels, favorites, and health history between your computer and Codespaces:
 
