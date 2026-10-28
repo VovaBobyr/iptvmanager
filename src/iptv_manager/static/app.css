@@ -37,7 +37,7 @@ h1 span { color: transparent; -webkit-text-stroke: 1px #8fa0b8; }
 input, select { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: #0b0e14; color: var(--text); padding: 11px 12px; outline: none; font: inherit; font-size: 13px; }
 input:focus, select:focus { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgb(97 169 255 / 12%); }
 label { display: block; margin: 20px 0 7px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
-.workflow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }.workflow-card { min-width: 0; position: relative; padding: 26px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(145deg, var(--panel-2), var(--panel)); overflow: hidden; }.workflow-card h2 { font-size: 23px; }.step-number { position: absolute; right: 18px; top: 12px; font-size: 42px; font-weight: 800; color: rgb(255 255 255 / 4%); }.card-copy { min-height: 60px; color: var(--muted); font-size: 13px; line-height: 1.5; }.workflow-card > .button { width: 100%; margin-top: 10px; }.button-row { display: flex; gap: 8px; margin-top: 24px; }.button-row .button { flex: 1; }.inline-message { min-height: 34px; color: var(--muted); font-size: 12px; line-height: 1.4; }.inline-form, .playlist-url-row { display: flex; gap: 8px; margin: 12px 0; }.inline-form .button, .playlist-url-row .button { flex: none; }.text-link { display: inline-block; color: var(--accent-2); font-size: 12px; margin-top: 4px; }.progress-box { margin-top: 18px; }.progress-box.hidden { display: none; }.progress-track { height: 7px; border-radius: 99px; overflow: hidden; background: #080a0e; }.progress-track i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .25s; }.progress-box p { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.workflow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }.workflow-card { container-type: inline-size; min-width: 0; position: relative; padding: 26px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(145deg, var(--panel-2), var(--panel)); overflow: hidden; }.workflow-card h2 { font-size: 23px; }.step-number { position: absolute; right: 18px; top: 12px; font-size: 42px; font-weight: 800; color: rgb(255 255 255 / 4%); }.card-copy { min-height: 60px; color: var(--muted); font-size: 13px; line-height: 1.5; }.workflow-card > .button { width: 100%; margin-top: 10px; }.button-row { display: flex; gap: 8px; margin-top: 24px; }.button-row .button { flex: 1; }.inline-message { min-height: 34px; color: var(--muted); font-size: 12px; line-height: 1.4; }.inline-form, .playlist-url-row { display: flex; gap: 8px; margin: 12px 0; }.inline-form .button, .playlist-url-row .button { flex: none; }.text-link { display: inline-block; color: var(--accent-2); font-size: 12px; margin-top: 4px; }.progress-box { margin-top: 18px; }.progress-box.hidden { display: none; }.progress-track { height: 7px; border-radius: 99px; overflow: hidden; background: #080a0e; }.progress-track i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .25s; }.progress-box p { color: var(--muted); font-size: 11px; line-height: 1.4; }
 .scan-monitor { margin-top: 20px; padding: 20px; border: 1px solid rgb(117 240 178 / 32%); border-radius: 14px; background: linear-gradient(145deg, rgb(117 240 178 / 10%), rgb(9 11 16 / 72%)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%), 0 14px 32px rgb(0 0 0 / 18%); }
 .scan-monitor.hidden { display: none; }
 .hidden { display: none !important; }
@@ -50,19 +50,21 @@ label { display: block; margin: 20px 0 7px; color: var(--muted); font-size: 11px
 .scan-percent { color: var(--accent); font-size: 32px; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
 .scan-progress-track { height: 14px; overflow: hidden; border: 1px solid #222a35; border-radius: 99px; background: #080a0e; box-shadow: inset 0 2px 4px rgb(0 0 0 / 45%); }
 .scan-progress-track i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-2), var(--accent)); box-shadow: 0 0 18px rgb(117 240 178 / 52%); transition: width .35s ease; }
-.scan-metrics { display: grid; grid-template-columns: 1.35fr repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+.scan-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 15px; }
 .scan-metric { min-width: 0; padding: 11px 12px; border: 1px solid rgb(255 255 255 / 6%); border-radius: 10px; background: rgb(8 10 14 / 48%); }
-.scan-metric strong { display: block; overflow: hidden; color: var(--text); font-size: 18px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.scan-metric strong { display: block; color: var(--text); font-size: 18px; line-height: 1.2; overflow-wrap: anywhere; }
 .scan-metric span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
 .scan-metric.live strong { color: var(--accent); }
 .scan-metric.failed strong { color: #ff8b8b; }
 .scan-metric.uncertain strong { color: #ffc978; }
 .scan-monitor-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
-.scan-monitor-footer p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.scan-monitor-footer > span { min-width: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .button.danger { flex: none; border-color: rgb(255 139 139 / 32%); color: #ff9e9e; background: rgb(104 56 56 / 16%); }
 .button.danger:hover { border-color: #ff8b8b; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @keyframes scan-pulse { 70% { box-shadow: 0 0 0 9px rgb(117 240 178 / 0%); } 100% { box-shadow: 0 0 0 0 rgb(117 240 178 / 0%); } }
+@container (min-width: 560px) { .scan-metrics { grid-template-columns: 1.35fr repeat(3, minmax(0, 1fr)); } }
+@container (max-width: 420px) { .scan-monitor { padding: 16px; }.scan-monitor-footer { align-items: stretch; flex-direction: column; }.scan-monitor-footer .button { width: 100%; }.scan-percent { font-size: 28px; } }
 .network-note { margin: 4px 0 8px; color: #ffc978; font-size: 11px; line-height: 1.4; }
 .data-panel { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px 28px; padding: 24px 28px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(145deg, var(--panel-2), var(--panel)); }
 .data-panel h2 { margin: 0; font-size: 23px; }
