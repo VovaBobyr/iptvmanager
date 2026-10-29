@@ -9,5 +9,5 @@ def test_dashboard_assets_use_proxy_safe_paths() -> None:
     dashboard = (TEMPLATES / "dashboard.html").read_text(encoding="utf-8")
 
     assert 'href="/static/app.css?v=3"' in base
-    assert 'src="/static/app.js?v=3"' in dashboard
+    assert 'src="/static/app.js?v=4"' in dashboard
     assert "url_for('static'" not in base + dashboard

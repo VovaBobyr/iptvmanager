@@ -1,3 +1,5 @@
+const RATE_SAMPLE_SECONDS = 10;
+const RATE_SMOOTHING_WEIGHT = 0.35;
 const state = { page: 1, pageSize: 50, total: 0, groups: [], sourceId: null, scanTimer: null, activeJobId: null, resumableJobId: null, scanSample: null };
 
 const $ = (selector) => document.querySelector(selector);
@@ -174,10 +176,26 @@ function formatDuration(seconds) {
   return `About ${hours} hr ${minutes} min remaining`;
 }
 
-function parseServerTime(value) {
-  if (!value) return Date.now();
-  const hasTimezone = /(?:z|[+-]\d{2}:?\d{2})$/i.test(value);
-  return new Date(hasTimezone ? value : `${value}Z`).getTime();
+function measureScanRate(job, now = Date.now()) {
+  const previous = state.scanSample?.jobId === job.id ? state.scanSample : null;
+  if (!previous || job.completed < previous.completed) {
+    state.scanSample = { jobId: job.id, completed: job.completed, time: now, rate: null };
+    return null;
+  }
+
+  const sampleSeconds = Math.max(0, (now - previous.time) / 1000);
+  const sampleCompleted = job.completed - previous.completed;
+  if (sampleSeconds < RATE_SAMPLE_SECONDS || sampleCompleted <= 0) {
+    return previous.rate;
+  }
+
+  const observedRate = sampleCompleted / sampleSeconds;
+  const rate = previous.rate === null
+    ? observedRate
+    : (previous.rate * (1 - RATE_SMOOTHING_WEIGHT))
+      + (observedRate * RATE_SMOOTHING_WEIGHT);
+  state.scanSample = { jobId: job.id, completed: job.completed, time: now, rate };
+  return rate;
 }
 
 function setScanControls(active) {
@@ -200,7 +218,12 @@ async function resumeScan() {
     const job = await api(`/api/health-scans/${state.resumableJobId}/resume`, { method: "POST" });
     state.activeJobId = job.id;
     state.resumableJobId = null;
-    state.scanSample = { jobId: job.id, completed: job.completed, time: Date.now() };
+    state.scanSample = {
+      jobId: job.id,
+      completed: job.completed,
+      time: Date.now(),
+      rate: null,
+    };
     button.classList.add("hidden");
     $("#cancel-scan").classList.remove("hidden");
     pollScan(job.id);
@@ -265,18 +288,13 @@ async function pollScan(jobId) {
     state.resumableJobId = resumable ? job.id : null;
     setScanControls(active);
     if (active) {
-      const now = Date.now();
-      const previous = state.scanSample?.jobId === job.id ? state.scanSample : null;
-      const sampleSeconds = previous ? Math.max(1, (now - previous.time) / 1000) : 0;
-      const sampleCompleted = previous ? job.completed - previous.completed : 0;
-      const started = parseServerTime(job.started_at);
-      const elapsedSeconds = Math.max(1, (now - started) / 1000);
-      const channelsPerSecond = sampleCompleted > 0
-        ? sampleCompleted / sampleSeconds
-        : job.completed / elapsedSeconds;
-      const remainingSeconds = channelsPerSecond > 0 ? (job.total - job.completed) / channelsPerSecond : Number.NaN;
-      $("#scan-eta").textContent = `${formatDuration(remainingSeconds)} · ${channelsPerSecond.toFixed(1)} channels/sec`;
-      state.scanSample = { jobId: job.id, completed: job.completed, time: now };
+      const channelsPerSecond = measureScanRate(job);
+      if (channelsPerSecond === null) {
+        $("#scan-eta").textContent = "Measuring scan speed…";
+      } else {
+        const remainingSeconds = (job.total - job.completed) / channelsPerSecond;
+        $("#scan-eta").textContent = `${formatDuration(remainingSeconds)} · ${channelsPerSecond.toFixed(1)} channels/sec`;
+      }
       state.scanTimer = window.setTimeout(() => pollScan(jobId), 2000);
     } else {
       state.activeJobId = null;
