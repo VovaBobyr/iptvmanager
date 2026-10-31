@@ -104,16 +104,26 @@
     <div class="curation-copy">
       <p class="eyebrow">DESKTOP CURATION</p>
       <h2 id="curation-heading">Review channels in your preferred player</h2>
-      <p>Open the verified-live playlist in IPTVnator, QiTV, VLC, or another M3U player. Channels are grouped by country and category. After reviewing them, export the selected favorites as M3U and merge them into one of your IPTV Manager groups.</p>
+      <p>Open either verified-live view in IPTVnator, QiTV, VLC, or another M3U player. Use the country view to find all Ukrainian channels and the category view for Comedy, News, Sports, and other types across every country.</p>
     </div>
     <div class="curation-grid">
       <div>
-        <label for="live-playlist-url">Verified-live playlist URL</label>
-        <div class="playlist-url-row">
-          <input id="live-playlist-url" type="text" readonly>
-          <button id="copy-live-playlist" class="button" type="button">Copy URL</button>
+        <div class="live-export">
+          <label for="live-country-playlist-url">Live grouped by country</label>
+          <div class="playlist-url-row">
+            <input id="live-country-playlist-url" type="text" readonly>
+            <button id="copy-live-country-playlist" class="button" type="button">Copy URL</button>
+          </div>
+          <a class="button primary download-live" href="/playlists/system/live-by-country.m3u" download="iptv-manager-live-by-country.m3u">Download by country</a>
         </div>
-        <a class="button primary download-live" href="/playlists/system/live.m3u" download="iptv-manager-live.m3u">Download live M3U</a>
+        <div class="live-export">
+          <label for="live-category-playlist-url">Live grouped by category</label>
+          <div class="playlist-url-row">
+            <input id="live-category-playlist-url" type="text" readonly>
+            <button id="copy-live-category-playlist" class="button" type="button">Copy URL</button>
+          </div>
+          <a class="button primary download-live" href="/playlists/system/live-by-category.m3u" download="iptv-manager-live-by-category.m3u">Download by category</a>
+        </div>
       </div>
       <div>
         <label for="import-group">Import favorites into</label>
@@ -159,5 +169,5 @@
       <button id="next-page" class="button" type="button">Next →</button>
     </div>
   </section>
-  <script src="/static/app.js?v=6" defer></script>
+  <script src="/static/app.js?v=7" defer></script>
 {% endblock %}

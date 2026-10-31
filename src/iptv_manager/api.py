@@ -507,38 +507,64 @@ def reorder_favorites(
     return {"updated": len(items)}
 
 
-@playlist_router.get("/system/live.m3u")
-def verified_live_playlist(session: Session = Depends(get_session)) -> Response:
+def _verified_live_entries(session: Session, group_by: str) -> list[M3UEntry]:
     channels = list(
         session.scalars(
             select(Channel)
             .where(Channel.active, Channel.health_status == "working")
-            .order_by(Channel.country, Channel.group_title, Channel.name, Channel.id)
+            .order_by(Channel.name, Channel.id)
         )
     )
-    entries = [
-        M3UEntry(
-            name=channel.name,
-            url=channel.stream_url,
-            metadata={
-                "tvg-id": channel.tvg_id or "",
-                "tvg-name": channel.tvg_name or channel.name,
-                "tvg-logo": channel.tvg_logo or "",
-                "tvg-country": channel.country or "",
-                "tvg-language": channel.language or "",
-                "group-title": (
-                    f"{channel.country or 'Unknown'} - "
-                    f"{channel.group_title or 'Uncategorized'}"
-                ),
-            },
+    entries: list[M3UEntry] = []
+    for channel in channels:
+        group_titles = (
+            [channel.country or "Unknown"]
+            if group_by == "country"
+            else sorted(_metadata_tokens(channel.group_title), key=str.casefold)
+            or ["Uncategorized"]
         )
-        for channel in channels
-    ]
+        for group_title in group_titles:
+            entries.append(
+                M3UEntry(
+                    name=channel.name,
+                    url=channel.stream_url,
+                    metadata={
+                        "tvg-id": channel.tvg_id or "",
+                        "tvg-name": channel.tvg_name or channel.name,
+                        "tvg-logo": channel.tvg_logo or "",
+                        "tvg-country": channel.country or "",
+                        "tvg-language": channel.language or "",
+                        "group-title": group_title,
+                    },
+                )
+            )
+    return sorted(
+        entries,
+        key=lambda entry: (entry.metadata["group-title"].casefold(), entry.name.casefold()),
+    )
+
+
+def _verified_live_response(session: Session, group_by: str, filename: str) -> Response:
     return Response(
-        render_m3u(entries),
+        render_m3u(_verified_live_entries(session, group_by)),
         media_type="audio/x-mpegurl",
-        headers={"Content-Disposition": 'inline; filename="iptv-manager-live.m3u"'},
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )
+
+
+@playlist_router.get("/system/live.m3u")
+def verified_live_playlist(session: Session = Depends(get_session)) -> Response:
+    return _verified_live_response(session, "category", "iptv-manager-live.m3u")
+
+
+@playlist_router.get("/system/live-by-country.m3u")
+def verified_live_by_country(session: Session = Depends(get_session)) -> Response:
+    return _verified_live_response(session, "country", "iptv-manager-live-by-country.m3u")
+
+
+@playlist_router.get("/system/live-by-category.m3u")
+def verified_live_by_category(session: Session = Depends(get_session)) -> Response:
+    return _verified_live_response(session, "category", "iptv-manager-live-by-category.m3u")
 
 
 @playlist_router.get("/{slug}.m3u")

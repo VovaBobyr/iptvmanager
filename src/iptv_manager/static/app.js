@@ -79,7 +79,8 @@ function getPublicBase() {
 function updatePlaylistUrl() {
   const group = state.groups.find((item) => String(item.id) === $("#favorite-group").value);
   $("#playlist-url").value = group ? `${getPublicBase()}/playlists/${group.slug}.m3u` : "";
-  $("#live-playlist-url").value = `${getPublicBase()}/playlists/system/live.m3u`;
+  $("#live-country-playlist-url").value = `${getPublicBase()}/playlists/system/live-by-country.m3u`;
+  $("#live-category-playlist-url").value = `${getPublicBase()}/playlists/system/live-by-category.m3u`;
 }
 
 async function createGroup() {
@@ -384,8 +385,11 @@ $("#favorite-group").addEventListener("change", updatePlaylistUrl);
 $("#copy-playlist").addEventListener("click", async () => {
   if ($("#playlist-url").value) await navigator.clipboard.writeText($("#playlist-url").value);
 });
-$("#copy-live-playlist").addEventListener("click", async () => {
-  await navigator.clipboard.writeText($("#live-playlist-url").value);
+$("#copy-live-country-playlist").addEventListener("click", async () => {
+  await navigator.clipboard.writeText($("#live-country-playlist-url").value);
+});
+$("#copy-live-category-playlist").addEventListener("click", async () => {
+  await navigator.clipboard.writeText($("#live-category-playlist-url").value);
 });
 $("#import-favorites-m3u").addEventListener("click", () => {
   if (!$("#import-group").value) {

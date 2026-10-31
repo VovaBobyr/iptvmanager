@@ -75,6 +75,7 @@ label { display: block; margin: 20px 0 7px; color: var(--muted); font-size: 11px
 .curation-copy > p:not(.eyebrow) { max-width: 800px; color: var(--muted); font-size: 13px; line-height: 1.6; }
 .curation-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; margin-top: 10px; }
 .curation-grid label { margin-top: 10px; }
+.live-export + .live-export { margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--line); }
 .download-live, .import-favorites { width: 100%; margin-top: 8px; text-align: center; }
 .curation-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .curation-note code { color: var(--text); }
