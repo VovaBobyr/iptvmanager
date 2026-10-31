@@ -513,7 +513,7 @@ def verified_live_playlist(session: Session = Depends(get_session)) -> Response:
         session.scalars(
             select(Channel)
             .where(Channel.active, Channel.health_status == "working")
-            .order_by(Channel.group_title, Channel.name, Channel.id)
+            .order_by(Channel.country, Channel.group_title, Channel.name, Channel.id)
         )
     )
     entries = [
@@ -526,7 +526,10 @@ def verified_live_playlist(session: Session = Depends(get_session)) -> Response:
                 "tvg-logo": channel.tvg_logo or "",
                 "tvg-country": channel.country or "",
                 "tvg-language": channel.language or "",
-                "group-title": channel.group_title or "Uncategorized",
+                "group-title": (
+                    f"{channel.country or 'Unknown'} - "
+                    f"{channel.group_title or 'Uncategorized'}"
+                ),
             },
         )
         for channel in channels

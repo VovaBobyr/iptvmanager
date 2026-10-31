@@ -24,6 +24,7 @@ def _channel(
         name=name,
         stream_url=url,
         tvg_id=tvg_id,
+        country="UA",
         group_title="News",
         health_status=health_status,
         active=active,
@@ -62,6 +63,8 @@ def test_live_playlist_exports_only_active_working_channels(session) -> None:
     assert [(entry.name, entry.metadata["tvg-id"]) for entry in entries] == [
         ("Live", "live.one")
     ]
+    assert entries[0].metadata["tvg-country"] == "UA"
+    assert entries[0].metadata["group-title"] == "UA - News"
 
 
 def test_favorite_m3u_import_matches_id_then_url_and_skips_duplicates(session) -> None:
