@@ -123,12 +123,41 @@ function escapeHtml(value) {
   }[char]));
 }
 
+function populateFacet(selector, label, items) {
+  const select = $(selector);
+  const selected = select.value;
+  const emptyLabel = items.length ? label : `${label} (no metadata)`;
+  select.innerHTML = `<option value="">${emptyLabel}</option>${items.map((item) => (
+    `<option value="${escapeHtml(item.value)}">${escapeHtml(item.value)} (${item.count.toLocaleString()})</option>`
+  )).join("")}`;
+  select.disabled = items.length === 0;
+  if (items.some((item) => item.value === selected)) select.value = selected;
+}
+
+async function loadChannelFilters() {
+  const params = new URLSearchParams();
+  const health = $("#health-filter").value;
+  if (state.sourceId) params.set("source_id", state.sourceId);
+  if (health) params.set("health", health);
+  const data = await api(`/api/channel-filters?${params}`);
+  populateFacet("#country-filter", "All countries", data.countries);
+  populateFacet("#language-filter", "All languages", data.languages);
+  populateFacet("#category-filter", "All categories", data.categories);
+}
+
 async function loadChannels() {
   const params = new URLSearchParams({ page: state.page, page_size: state.pageSize });
   const query = $("#channel-search").value.trim();
-  const health = $("#health-filter").value;
+  const filters = {
+    health: $("#health-filter").value,
+    country: $("#country-filter").value,
+    language: $("#language-filter").value,
+    category: $("#category-filter").value,
+  };
   if (query) params.set("q", query);
-  if (health) params.set("health", health);
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
   const data = await api(`/api/channels?${params}`);
   state.total = data.total;
   const list = $("#channel-list");
@@ -321,11 +350,20 @@ $("#resume-scan").addEventListener("click", resumeScan);
 $("#restore-backup").addEventListener("click", () => $("#restore-file").click());
 $("#restore-file").addEventListener("change", (event) => restoreBackup(event.target.files[0]));
 $("#channel-search").addEventListener("input", () => { window.clearTimeout(searchTimer); searchTimer = window.setTimeout(() => { state.page = 1; loadChannels(); }, 300); });
-$("#health-filter").addEventListener("change", () => { state.page = 1; loadChannels(); });
+$("#health-filter").addEventListener("change", async () => {
+  state.page = 1;
+  await loadChannelFilters();
+  await loadChannels();
+});
+[$("#country-filter"), $("#language-filter"), $("#category-filter")].forEach((select) => {
+  select.addEventListener("change", () => { state.page = 1; loadChannels(); });
+});
 $("#previous-page").addEventListener("click", () => { state.page -= 1; loadChannels(); });
 $("#next-page").addEventListener("click", () => { state.page += 1; loadChannels(); });
 
-Promise.all([loadSources(), loadGroups(), loadChannels()]).catch((error) => console.error(error));
+Promise.all([loadSources(), loadGroups()])
+  .then(() => Promise.all([loadChannelFilters(), loadChannels()]))
+  .catch((error) => console.error(error));
 api("/api/health-scans").then((jobs) => {
   const active = jobs.find((job) => ["queued", "running"].includes(job.status));
   const resumable = jobs.find((job) => isResumable(job));

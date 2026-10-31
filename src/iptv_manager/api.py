@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 from dataclasses import asdict
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
-from sqlalchemy import func, select
+from sqlalchemy import func, literal, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
@@ -62,6 +63,32 @@ def _scan_job_dict(job: HealthScanJob) -> dict[str, object]:
         "started_at": job.started_at,
         "finished_at": job.finished_at,
     }
+
+
+def _metadata_tokens(value: str | None) -> set[str]:
+    return {token.strip() for token in (value or "").split(";") if token.strip()}
+
+
+def _metadata_token_filter(column, value: str):
+    escaped = value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    delimited = literal(";") + func.coalesce(column, "") + literal(";")
+    return delimited.ilike(f"%;{escaped};%", escape="\\")
+
+
+def _facet_values(
+    session: Session, column, filters: list[object]
+) -> list[dict[str, str | int]]:
+    counts: Counter[str] = Counter()
+    rows = session.execute(
+        select(column, func.count()).where(*filters, column.is_not(None)).group_by(column)
+    )
+    for value, count in rows:
+        for token in _metadata_tokens(value):
+            counts[token] += count
+    return [
+        {"value": value, "count": counts[value]}
+        for value in sorted(counts, key=str.casefold)
+    ]
 
 
 @router.get("/backups/database")
@@ -182,6 +209,10 @@ def list_channels(
         (country, Channel.country),
         (language, Channel.language),
         (category, Channel.group_title),
+    ):
+        if value is not None:
+            filters.append(_metadata_token_filter(column, value))
+    for value, column in (
         (source_id, Channel.source_id),
         (health, Channel.health_status),
         (active, Channel.active),
@@ -203,6 +234,28 @@ def list_channels(
         "page": page,
         "page_size": page_size,
         "total": total,
+    }
+
+
+@router.get("/channel-filters")
+def channel_filters(
+    source_id: int | None = None,
+    health: str | None = None,
+    active: bool | None = True,
+    session: Session = Depends(get_session),
+) -> dict[str, list[dict[str, str | int]]]:
+    filters = []
+    for value, column in (
+        (source_id, Channel.source_id),
+        (health, Channel.health_status),
+        (active, Channel.active),
+    ):
+        if value is not None:
+            filters.append(column == value)
+    return {
+        "countries": _facet_values(session, Channel.country, filters),
+        "languages": _facet_values(session, Channel.language, filters),
+        "categories": _facet_values(session, Channel.group_title, filters),
     }
 
 

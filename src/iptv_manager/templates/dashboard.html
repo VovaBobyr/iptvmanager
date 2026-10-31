@@ -113,6 +113,15 @@
           <option value="unknown">Not checked</option>
           <option value="geographically_restricted">Geo-restricted</option>
         </select>
+        <select id="country-filter" aria-label="Country">
+          <option value="">All countries</option>
+        </select>
+        <select id="language-filter" aria-label="Language">
+          <option value="">All languages</option>
+        </select>
+        <select id="category-filter" aria-label="Category">
+          <option value="">All categories</option>
+        </select>
       </div>
     </div>
     <div id="channel-list" class="channel-list">
@@ -124,5 +133,5 @@
       <button id="next-page" class="button" type="button">Next →</button>
     </div>
   </section>
-  <script src="/static/app.js?v=4" defer></script>
+  <script src="/static/app.js?v=5" defer></script>
 {% endblock %}

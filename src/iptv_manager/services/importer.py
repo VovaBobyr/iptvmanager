@@ -21,6 +21,31 @@ class ImportResult:
     unchanged_remote: bool = False
 
 
+def _country_from_tvg_id(tvg_id: str | None) -> str | None:
+    channel_id = (tvg_id or "").partition("@")[0]
+    suffix = channel_id.rpartition(".")[2]
+    return suffix.upper() if len(suffix) == 2 and suffix.isalpha() else None
+
+
+def _backfill_source_metadata(session: Session, source_id: int) -> int:
+    updated = 0
+    channels = session.scalars(
+        select(Channel).where(
+            Channel.source_id == source_id,
+            Channel.country.is_(None),
+            Channel.tvg_id.is_not(None),
+        )
+    )
+    for channel in channels:
+        country = _country_from_tvg_id(channel.tvg_id)
+        if country:
+            channel.country = country
+            updated += 1
+    if updated:
+        session.commit()
+    return updated
+
+
 def import_content(session: Session, source: PlaylistSource, content: str) -> ImportResult:
     entries = parse_m3u(content)
     now = datetime.now(UTC)
@@ -42,7 +67,11 @@ def import_content(session: Session, source: PlaylistSource, content: str) -> Im
             "tvg_id": entry.metadata.get("tvg-id"),
             "tvg_name": entry.metadata.get("tvg-name"),
             "tvg_logo": entry.metadata.get("tvg-logo"),
-            "country": entry.metadata.get("tvg-country") or entry.metadata.get("country"),
+            "country": (
+                entry.metadata.get("tvg-country")
+                or entry.metadata.get("country")
+                or _country_from_tvg_id(entry.metadata.get("tvg-id"))
+            ),
             "language": entry.metadata.get("tvg-language") or entry.metadata.get("language"),
             "group_title": entry.metadata.get("group-title"),
             "extra_metadata": entry.metadata,
@@ -93,7 +122,8 @@ async def refresh_remote_source(
     async with httpx.AsyncClient(follow_redirects=True, timeout=timeout_seconds) as client:
         response = await client.get(source.url, headers=headers)
     if response.status_code == 304:
-        return ImportResult(0, 0, 0, 0, unchanged_remote=True)
+        updated = _backfill_source_metadata(session, source.id)
+        return ImportResult(0, 0, updated, 0, unchanged_remote=True)
     response.raise_for_status()
     source.etag = response.headers.get("etag")
     source.last_modified = response.headers.get("last-modified")
