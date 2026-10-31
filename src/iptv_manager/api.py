@@ -24,6 +24,7 @@ from .models import (
 from .schemas import (
     ChannelRead,
     FavoriteAdd,
+    FavoriteM3UImport,
     GroupCreate,
     HealthScanCreate,
     InlineImport,
@@ -32,6 +33,7 @@ from .schemas import (
     SourceRead,
 )
 from .services.backups import create_database_backup, restore_database_backup
+from .services.favorites import import_favorites_m3u
 from .services.health import probe_url, save_result
 from .services.health_jobs import cancel_health_job, mark_interrupted_jobs, start_health_job
 from .services.importer import import_content, refresh_remote_source
@@ -460,6 +462,22 @@ def add_favorite(
     return {"id": item.id}
 
 
+@router.post("/favorite-groups/{group_id}/imports/m3u")
+def import_group_m3u(
+    group_id: int,
+    payload: FavoriteM3UImport,
+    session: Session = Depends(get_session),
+) -> dict[str, int]:
+    group = session.get(FavoriteGroup, group_id)
+    if group is None:
+        raise HTTPException(404, "Favorite group not found")
+    try:
+        result = import_favorites_m3u(session, group, payload.content)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return asdict(result)
+
+
 @router.delete("/favorite-groups/{group_id}/items/{channel_id}", status_code=204)
 def remove_favorite(
     group_id: int, channel_id: int, session: Session = Depends(get_session)
@@ -487,6 +505,37 @@ def reorder_favorites(
         by_channel[channel_id].position = position
     session.commit()
     return {"updated": len(items)}
+
+
+@playlist_router.get("/system/live.m3u")
+def verified_live_playlist(session: Session = Depends(get_session)) -> Response:
+    channels = list(
+        session.scalars(
+            select(Channel)
+            .where(Channel.active, Channel.health_status == "working")
+            .order_by(Channel.group_title, Channel.name, Channel.id)
+        )
+    )
+    entries = [
+        M3UEntry(
+            name=channel.name,
+            url=channel.stream_url,
+            metadata={
+                "tvg-id": channel.tvg_id or "",
+                "tvg-name": channel.tvg_name or channel.name,
+                "tvg-logo": channel.tvg_logo or "",
+                "tvg-country": channel.country or "",
+                "tvg-language": channel.language or "",
+                "group-title": channel.group_title or "Uncategorized",
+            },
+        )
+        for channel in channels
+    ]
+    return Response(
+        render_m3u(entries),
+        media_type="audio/x-mpegurl",
+        headers={"Content-Disposition": 'inline; filename="iptv-manager-live.m3u"'},
+    )
 
 
 @playlist_router.get("/{slug}.m3u")

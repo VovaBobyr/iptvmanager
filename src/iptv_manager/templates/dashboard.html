@@ -100,6 +100,32 @@
     <p id="backup-message" class="inline-message" aria-live="polite"></p>
   </section>
 
+  <section class="panel curation-panel" aria-labelledby="curation-heading">
+    <div class="curation-copy">
+      <p class="eyebrow">DESKTOP CURATION</p>
+      <h2 id="curation-heading">Review channels in your preferred player</h2>
+      <p>Open the verified-live playlist in IPTVnator, QiTV, VLC, or another M3U player. After reviewing channels, export the selected favorites as M3U and merge them into one of your IPTV Manager groups.</p>
+    </div>
+    <div class="curation-grid">
+      <div>
+        <label for="live-playlist-url">Verified-live playlist URL</label>
+        <div class="playlist-url-row">
+          <input id="live-playlist-url" type="text" readonly>
+          <button id="copy-live-playlist" class="button" type="button">Copy URL</button>
+        </div>
+        <a class="button primary download-live" href="/playlists/system/live.m3u" download="iptv-manager-live.m3u">Download live M3U</a>
+      </div>
+      <div>
+        <label for="import-group">Import favorites into</label>
+        <select id="import-group" aria-label="Favorite group for M3U import"><option value="">Create a group first</option></select>
+        <input id="favorites-import-file" class="sr-only" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl">
+        <button id="import-favorites-m3u" class="button import-favorites" type="button">Import favorites M3U</button>
+        <p class="curation-note">Import matches channels by <code>tvg-id</code>, then by stream URL. Existing favorites are kept and duplicates are skipped.</p>
+      </div>
+    </div>
+    <p id="favorites-import-message" class="inline-message" aria-live="polite"></p>
+  </section>
+
   <section class="panel channel-browser">
     <div class="panel-heading browser-heading">
       <div><p class="eyebrow">CHANNELS</p><h2>Browse and curate</h2></div>
@@ -133,5 +159,5 @@
       <button id="next-page" class="button" type="button">Next →</button>
     </div>
   </section>
-  <script src="/static/app.js?v=5" defer></script>
+  <script src="/static/app.js?v=6" defer></script>
 {% endblock %}

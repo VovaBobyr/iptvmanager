@@ -49,6 +49,10 @@ class FavoriteAdd(BaseModel):
     channel_id: int
 
 
+class FavoriteM3UImport(BaseModel):
+    content: str = Field(min_length=1, max_length=20 * 1024 * 1024)
+
+
 class ReorderFavorites(BaseModel):
     channel_ids: list[int]
 

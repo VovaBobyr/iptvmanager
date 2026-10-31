@@ -103,15 +103,22 @@ iptv-manager
 
 1. Створіть групу Favorites, наприклад `UA Основні`, `Новини`, `Спорт`, `Фільми та серіали`,
    `Дитячі` або `Музика`.
-2. Виберіть цю групу у списку.
-3. Встановіть потрібні фільтри, перегляньте живі канали та натискайте **+ Favorite** біля тих,
-   які хочете залишити.
-4. Для кожної групи застосунок створює окремий Extended M3U URL. Значення `group-title` у ньому
+2. У блоці **Desktop curation** скопіюйте **Verified-live playlist URL** у IPTVnator, QiTV або
+   інший M3U-програвач. Також можна натиснути **Download live M3U** і відкрити локальний файл.
+3. Переглядайте канали у зовнішньому програвачі та сформуйте/експортуйте вибрані канали як
+   звичайний `.m3u` або `.m3u8` файл.
+4. У полі **Import favorites into** виберіть створену групу, натисніть
+   **Import favorites M3U** і виберіть експортований файл.
+5. IPTV Manager спочатку зіставить записи за `tvg-id`, потім за URL. Наявні Favorites не
+   видаляються, дублікати пропускаються, а інтерфейс покаже кількість доданих, невідомих і
+   неоднозначних записів.
+6. За бажанням канали також можна додавати безпосередньо в браузері кнопкою **+ Favorite**.
+7. Для кожної групи застосунок створює окремий Extended M3U URL. Значення `group-title` у ньому
    відповідає назві вашої групи Favorites.
 
-Зовнішній IPTV-програвач можна використовувати для тестового перегляду, але його власні Favorites
-не синхронізуються автоматично з IPTV Manager. Щоб не втратити добірку, зберігайте основний список
-Favorites саме в IPTV Manager.
+Favorites зовнішнього програвача не синхронізуються у фоні: після зміни добірки потрібно знову
+експортувати її у M3U та імпортувати файл. IPTV Manager виконує безпечне об'єднання з вибраною
+групою і залишається основним сховищем списку для Hot Player.
 
 ### 4. Оновлюйте вихідний плейлист без втрати Favorites
 
@@ -182,6 +189,8 @@ hosting: it stops after inactivity, and its forwarded port is private by default
 - Search and filters through a paginated channel API
 - Independent favorite groups with deterministic ordering
 - Valid Extended M3U export for every favorite group
+- Verified-live Extended M3U export for desktop IPTV players
+- Non-destructive favorite M3U import with `tvg-id` and stream URL matching
 - Bounded asynchronous health checks with HTTP evidence and optional `ffprobe`
 - Persistent bulk-scan jobs with progress, cancellation, restart recovery, and favorite-first ordering
 - Persistent, non-destructive health-check history

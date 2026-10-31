@@ -61,20 +61,25 @@ async function importSource() {
 
 async function loadGroups() {
   state.groups = await api("/api/favorite-groups");
-  const select = $("#favorite-group");
-  const selected = select.value;
-  select.innerHTML = state.groups.length
-    ? state.groups.map((group) => `<option value="${group.id}">${escapeHtml(group.name)} (${group.item_count})</option>`).join("")
-    : '<option value="">No groups yet</option>';
-  if (state.groups.some((group) => String(group.id) === selected)) select.value = selected;
+  [$("#favorite-group"), $("#import-group")].forEach((select) => {
+    const selected = select.value;
+    select.innerHTML = state.groups.length
+      ? state.groups.map((group) => `<option value="${group.id}">${escapeHtml(group.name)} (${group.item_count})</option>`).join("")
+      : '<option value="">No groups yet</option>';
+    if (state.groups.some((group) => String(group.id) === selected)) select.value = selected;
+  });
   updatePlaylistUrl();
+}
+
+function getPublicBase() {
+  const configuredBase = document.body.dataset.publicBaseUrl.replace(/\/$/, "");
+  return configuredBase || window.location.origin;
 }
 
 function updatePlaylistUrl() {
   const group = state.groups.find((item) => String(item.id) === $("#favorite-group").value);
-  const configuredBase = document.body.dataset.publicBaseUrl.replace(/\/$/, "");
-  const publicBase = configuredBase || window.location.origin;
-  $("#playlist-url").value = group ? `${publicBase}/playlists/${group.slug}.m3u` : "";
+  $("#playlist-url").value = group ? `${getPublicBase()}/playlists/${group.slug}.m3u` : "";
+  $("#live-playlist-url").value = `${getPublicBase()}/playlists/system/live.m3u`;
 }
 
 async function createGroup() {
@@ -88,6 +93,7 @@ async function createGroup() {
     $("#group-name").value = "";
     await loadGroups();
     $("#favorite-group").value = String(group.id);
+    $("#import-group").value = String(group.id);
     updatePlaylistUrl();
   } catch (error) { window.alert(error.message); }
 }
@@ -284,6 +290,41 @@ async function restoreBackup(file) {
   }
 }
 
+async function importFavoritesM3U(file) {
+  const groupId = $("#import-group").value;
+  const button = $("#import-favorites-m3u");
+  const message = $("#favorites-import-message");
+  if (!groupId) {
+    window.alert("Create a favorite group first.");
+    return;
+  }
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) {
+    message.textContent = "The M3U file exceeds the 20 MB import limit.";
+    return;
+  }
+  setBusy(button, true, "Importing…");
+  message.textContent = "Matching channels with the IPTV Manager library…";
+  try {
+    const result = await api(`/api/favorite-groups/${groupId}/imports/m3u`, {
+      method: "POST",
+      body: JSON.stringify({ content: await file.text() }),
+    });
+    message.textContent = [
+      `${result.added.toLocaleString()} added`,
+      `${result.already_present.toLocaleString()} already present`,
+      `${result.unmatched.toLocaleString()} not found`,
+      `${result.ambiguous.toLocaleString()} ambiguous`,
+    ].join(" · ");
+    await loadGroups();
+  } catch (error) {
+    message.textContent = error.message;
+  } finally {
+    setBusy(button, false, "");
+    $("#favorites-import-file").value = "";
+  }
+}
+
 async function cancelScan() {
   if (!state.activeJobId || !window.confirm("Stop the current health scan? Saved results will be kept.")) return;
   try {
@@ -343,6 +384,17 @@ $("#favorite-group").addEventListener("change", updatePlaylistUrl);
 $("#copy-playlist").addEventListener("click", async () => {
   if ($("#playlist-url").value) await navigator.clipboard.writeText($("#playlist-url").value);
 });
+$("#copy-live-playlist").addEventListener("click", async () => {
+  await navigator.clipboard.writeText($("#live-playlist-url").value);
+});
+$("#import-favorites-m3u").addEventListener("click", () => {
+  if (!$("#import-group").value) {
+    window.alert("Create a favorite group first.");
+    return;
+  }
+  $("#favorites-import-file").click();
+});
+$("#favorites-import-file").addEventListener("change", (event) => importFavoritesM3U(event.target.files[0]));
 $("#scan-all").addEventListener("click", (event) => startScan(false, event.currentTarget));
 $("#scan-favorites").addEventListener("click", (event) => startScan(true, event.currentTarget));
 $("#cancel-scan").addEventListener("click", cancelScan);
